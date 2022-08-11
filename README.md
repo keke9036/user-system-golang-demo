@@ -20,9 +20,3 @@
 > 测试用户数据格式如下
 > - username: testu_{%d}
 > - password: rootpwd
-
-# 设计文档
-- https://confluence.shopee.io/pages/viewpage.action?pageId=1223628972
-
-# Gitlab
-- https://git.garena.com/weitao.yin/entry-task
