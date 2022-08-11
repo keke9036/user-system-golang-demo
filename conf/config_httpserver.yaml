@@ -1,0 +1,14 @@
+WebServer:
+  Addr: localhost
+  Port: 8080
+  ReadTimeout: 5
+  WriteTimeout: 5
+  StaticFileUrl: http://localhost:8080/upload
+RpcClient:
+  Addrs:
+    - localhost:9390
+#    - localhost:9391
+  #    - localhost:9392
+  CallTimeout: 3000
+  ConnectTimeout: 5000
+  MaxConnections: 10

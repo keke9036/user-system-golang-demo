@@ -1,0 +1,129 @@
+// @Description
+// @Author weitao.yin@shopee.com
+// @Since 2022/6/20
+
+package arpc
+
+import (
+	"entry-task/conf"
+	errorcode "entry-task/error"
+	"entry-task/util"
+	"errors"
+	"sync"
+	"time"
+)
+
+type RpcPool struct {
+	Mu          sync.Mutex
+	IdleTimeout time.Duration
+	conns       chan *rpcIdleConn
+	factory     func() (*Client, error)
+	close       func(client *Client) error
+}
+
+type rpcIdleConn struct {
+	conn *Client
+	t    time.Time
+}
+
+func (c *RpcPool) Get() (*Client, error) {
+	c.Mu.Lock()
+	conns := c.conns
+	c.Mu.Unlock()
+
+	errClosed := errors.New(errorcode.PoolClosed.GetMsg())
+
+	if conns == nil {
+		return nil, errClosed
+	}
+	for {
+		select {
+		case wrapConn := <-conns:
+			//if wrapConn == nil {
+			//	return nil, errClosed
+			//}
+			//if timeout := c.IdleTimeout; timeout > 0 {
+			//	if wrapConn.t.Add(timeout).Before(time.Now()) {
+			//		c.close(wrapConn.conn)
+			//		continue
+			//	}
+			//}
+			return wrapConn.conn, nil
+		case <-time.After(time.Millisecond * 100):
+			return nil, errors.New(errorcode.Timeout.GetMsg())
+		}
+	}
+}
+
+func (c *RpcPool) Put(conn *Client) error {
+	errRejected := errors.New(errorcode.PoolRejected.GetMsg())
+	if conn == nil {
+		return errRejected
+	}
+
+	c.Mu.Lock()
+	defer c.Mu.Unlock()
+
+	if c.conns == nil {
+		return c.close(conn)
+	}
+
+	select {
+	case c.conns <- &rpcIdleConn{conn: conn, t: time.Now()}:
+		return nil
+		//default:
+		//	return c.close(conn)
+	}
+}
+
+func (c *RpcPool) Close() {
+	util.Logger.Errorf("Close rpc pool")
+	c.Mu.Lock()
+	conns := c.conns
+	c.conns = nil
+	c.factory = nil
+	closeFun := c.close
+	c.close = nil
+	c.Mu.Unlock()
+
+	if conns == nil {
+		return
+	}
+
+	close(conns)
+	for wrapConn := range conns {
+		closeFun(wrapConn.conn)
+	}
+}
+
+func (c *RpcPool) IdleCount() int {
+	c.Mu.Lock()
+	conns := c.conns
+	c.Mu.Unlock()
+	return len(conns)
+}
+
+func NewRpcPool(conf *conf.RpcServerConf) (*RpcPool, error) {
+
+	//init pool
+	pool := &RpcPool{
+		conns: make(chan *rpcIdleConn, conf.MaxClientConnections),
+		factory: func() (*Client, error) {
+			return Dial("tcp", conf.Addr, conf.Timeout)
+		},
+		close:       func(v *Client) error { return v.Close() },
+		IdleTimeout: time.Second * 120,
+	}
+
+	//init make conns
+	for i := 0; i < conf.MaxClientConnections; i++ {
+		conn, err := pool.factory()
+		if err != nil {
+			pool.Close()
+			return nil, err
+		}
+		pool.conns <- &rpcIdleConn{conn: conn, t: time.Now()}
+	}
+
+	return pool, nil
+}

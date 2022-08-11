@@ -1,0 +1,12 @@
+default:
+  image: golang:1.15.14-buster
+
+unit-test-job:
+  stage: test
+  script:
+    - echo "Hello, $GITLAB_USER_LOGIN!"
+    - echo "Code format check begin..."
+    - go vet ./...
+    - echo "Unit test begin..."
+    - go test -cover -covermode=atomic -gcflags=all=-l ./internal/service/... -coverprofile=profile.cov
+    - go tool cover -func profile.cov

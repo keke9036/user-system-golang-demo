@@ -1,0 +1,26 @@
+WebServer:
+  Addr: localhost
+  Port: 8080
+  ReadTimeout: 5
+  WriteTimeout: 5
+  StaticFileUrl: http://localhost:8080/upload
+DbServer:
+  Username: root
+  Password: 12345678
+  Host: localhost
+  Port: 3306
+  DbName: user
+CacheServer:
+  Host: localhost:6379
+  DbIndex: 0
+  PoolSize: 10
+  MaxRetries: 3
+  IdleTimeout: 10
+RpcServer:
+  Addr: localhost:9090
+  ConnectTimeout: 5000
+  CallTimeout: 3000
+  ServerHandleTimeout: 5000
+  MaxClientConnections: 1000
+  ClientConnectTimeout: 100
+  WorkerId: 1

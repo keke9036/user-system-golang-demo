@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户登录</title>
+
+    <link href="https://cdn.bootcss.com/jquery-weui/1.2.0/css/jquery-weui.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://res.wx.qq.com/open/libs/weui/1.1.2/weui.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/app.css"/>
+</head>
+
+<body>
+<div id="login_frame">
+
+    <div class="main-content">
+        <div class="main-title">
+            Welcome to login
+        </div>
+        <div class="login-container">
+            <div class="base-input-box">
+                <input type="text" placeholder="用户名" id="username" class="base-input" maxlength="32"/>
+            </div>
+            <div class="base-input-box">
+                <input type="password" placeholder="密码" id="password" class="base-input" maxlength="32"/>
+            </div>
+        </div>
+        <div class="button-container">
+            </span><span>登录</span>
+        </div>
+    </div>
+</div>
+</body>
+
+<script src="https://cdn.bootcss.com/jquery/1.11.0/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery-weui/1.2.0/js/jquery-weui.min.js"></script>
+<script>
+    $('.button-container').on('click', function () {
+
+        var username = $("#username").val();
+        if (!username || username.length < 4) {
+            $.toptip('请输入合法用户名', 'warning');
+            return;
+        }
+        var password = $("#password").val();
+        if (!password || password.length < 4) {
+            $.toptip('请输入合法密码', 'warning');
+            return;
+        }
+
+        var data = {"userName": username, "password": password}
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json;charset=utf-8",
+            url: "/api/v1/user/login",
+            data: JSON.stringify(data),
+            success: function (data) {
+                if (data.code == 0) {
+                    $.toptip('登录成功', 800, 'success');
+                    window.setTimeout(function () {
+                        window.location.href = "/static/html/home.html";
+                    }, 1000)
+                } else {
+                    $.toptip('用户名或者密码不正确', 'error');
+                }
+            },
+            error: function (data, type, error) {
+                $.toptip('用户名或者密码不正确', 'error');
+            }
+        });
+    });
+</script>

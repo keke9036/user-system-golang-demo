@@ -1,0 +1,16 @@
+DbServer:
+  Username: root
+  Password: 12345678
+  Host: localhost
+  Port: 3306
+  DbName: user
+CacheServer:
+  Host: localhost:6379
+  DbIndex: 0
+  PoolSize: 10
+  MaxRetries: 3
+  IdleTimeout: 10
+RpcServer:
+  Addr: localhost:9390
+  ServerHandleTimeout: 5000
+  WorkerId: 1
